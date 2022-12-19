@@ -72,4 +72,9 @@ typedef int32_t off_t;
 // Return the offset of 'member' relative to the beginning of a struct type
 #define offsetof(type, member)  ((size_t) (&((type*)0)->member))
 
+/*self define type */
+typedef uint32_t u32;
+typedef uint8_t u8;
+typedef int s32;
+typedef signed char s8;
 #endif /* !JOS_INC_TYPES_H */

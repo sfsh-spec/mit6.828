@@ -180,6 +180,7 @@ print-qemu:
 print-gdbport:
 	@echo $(GDBPORT)
 
+
 # For deleting the build
 clean:
 	rm -rf $(OBJDIR) .gdbinit jos.in qemu.log
@@ -314,3 +315,8 @@ always:
 
 .PHONY: all always \
 	handin git-handin tarball tarball-pref clean realclean distclean grade handin-prep handin-check
+
+########diy command##########
+
+kasm:
+	vim obj/kern/kernel.asm
