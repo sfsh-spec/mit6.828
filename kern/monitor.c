@@ -141,9 +141,9 @@ runcmd(char *buf, struct Trapframe *tf)
 	for (i = 0; i < ARRAY_SIZE(commands); i++) {
 		if (strcmp(argv[0], commands[i].name) == 0)
 		{
-			if (argc != commands[i].narg)
+			if (argc != commands[i].narg + 1)
 			{
-				cprintf("parameter count mismatch, expect %d parameter\n", commands[i].narg);
+				cprintf("parameter count mismatch, expect %d parameter\n", commands[i].narg+1);
 				return 0;
 			}
 			else
