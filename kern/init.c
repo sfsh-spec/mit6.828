@@ -19,7 +19,6 @@ test_backtrace(int x)
 	cprintf("leaving test_backtrace %d\n", x);
 }
 
-
 void
 i386_init(void)
 {
