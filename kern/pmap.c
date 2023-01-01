@@ -63,6 +63,7 @@ i386_detect_memory(void)
 // --------------------------------------------------------------
 
 static void boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
+static void boot_map_region_pse(pde_t *pgdir, u32 va, size_t size, physaddr_t pa, int perm);
 static void check_page_free_list(bool only_low_memory);
 static void check_page_alloc(void);
 static void check_kern_pgdir(void);
@@ -202,7 +203,6 @@ mem_init(void)
 	// Your code goes here:
 	boot_map_region(kern_pgdir, KSTACKTOP-KSTKSIZE, KSTKSIZE, 
 		PADDR(bootstack), PTE_P|PTE_W);
-
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
 	// Ie.  the VA range [KERNBASE, 2^32) should map to
@@ -213,7 +213,16 @@ mem_init(void)
 	// Your code goes here:
 	// cprintf("#################################\n");
 	boot_map_region(kern_pgdir, KERNBASE, 0xffffffff-KERNBASE+1, 0, PTE_W|PTE_P);
-
+	// boot_map_region_pse(kern_pgdir, KERNBASE, 0xffffffff-KERNBASE+1, 0, PTE_W|PTE_P);
+	u32 pde = kern_pgdir[PDX(0xf0400000)];
+	cprintf("kern_pgdir 0x%x pde 0x%x\n",(u32)kern_pgdir, pde);
+	// u32 cr4;
+	// cr4 = rcr4();
+	// cprintf("cr4 0x%x\n", cr4);
+	// cr4 = cr4 | CR4_PSE;
+	// lcr4(cr4);
+	// cr4 = rcr4();
+	// cprintf("cr4 0x%x\n", cr4);
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
 
@@ -437,6 +446,13 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 	}
 }
 
+static void boot_map_region_pse(pde_t *pgdir, u32 va, size_t size, physaddr_t pa, int perm)
+{
+	for (u32 i = 0; i < size; i += PTSIZE)	
+	{
+		pgdir[PDX(va + i)] = (pa + i) | PTE_PS | perm;
+	}
+}
 //
 // Map the physical page 'pp' at virtual address 'va'.
 // The permissions (the low 12 bits) of the page table entry
