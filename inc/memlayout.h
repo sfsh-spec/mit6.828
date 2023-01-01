@@ -18,6 +18,7 @@
 #define GD_UD     0x20     // user data
 #define GD_TSS0   0x28     // Task segment selector for CPU 0
 
+
 /*
  * Virtual memory map:                                Permissions
  *                                                    kernel/user
@@ -183,6 +184,7 @@ struct PageInfo {
 
 	uint16_t pp_ref;
 };
+
 
 #endif /* !__ASSEMBLER__ */
 #endif /* !JOS_INC_MEMLAYOUT_H */
