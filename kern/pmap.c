@@ -20,6 +20,7 @@ pde_t *kern_pgdir;		// Kernel's initial page directory
 struct PageInfo *pages;		// Physical page state array
 static struct PageInfo *page_free_list;	// Free list of physical pages
 
+static u32 kern_use_end;
 
 // --------------------------------------------------------------
 // Detect machine's physical memory setup.
@@ -113,6 +114,7 @@ boot_alloc(uint32_t n)
 	}
 	// cprintf("next free origin: 0x%x\n", nextfree);
 	nextfree = nextfree + ROUNDUP(n,PGSIZE);
+	kern_use_end = (u32)nextfree;
 	// cprintf("next free after: 0x%x\n", nextfree);
 	return result;
 }
@@ -166,7 +168,7 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// LAB 3: Your code here.
-
+	envs = (struct Env*)boot_alloc(NENV * sizeof(struct Env));
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
 	// up the list of free physical pages. Once we've done so, all further
@@ -190,10 +192,10 @@ mem_init(void)
 	//    - pages itself -- kernel RW, user NONE
 	// Your code goes here:
 	// cprintf("pages addr 0x%x\n", PADDR(pages));
-	boot_map_region(kern_pgdir, UPAGES, npages*sizeof(struct PageInfo), PADDR(pages), PTE_P|PTE_U);
+	boot_map_region(kern_pgdir, UPAGES, npages*sizeof(struct PageInfo), PADDR(pages), PTE_U | PTE_P);
 	// cprintf("************************");
-	boot_map_region(kern_pgdir, UPAGES + npages*sizeof(struct PageInfo), PTSIZE-npages*sizeof(struct PageInfo),
-		PADDR((u8*)pages+npages),PTE_U|PTE_P);
+	// boot_map_region(kern_pgdir, UPAGES + npages*sizeof(struct PageInfo), PTSIZE-npages*sizeof(struct PageInfo),
+	// 	PADDR((u8*)pages+npages),PTE_U|PTE_P);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map the 'envs' array read-only by the user at linear address UENVS
@@ -202,7 +204,7 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
-
+	boot_map_region(kern_pgdir, UENVS, NENV * sizeof(struct Env), PADDR(envs), PTE_U | PTE_P);
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
 	// stack.  The kernel stack grows down from virtual address KSTACKTOP.
@@ -300,9 +302,8 @@ page_init(void)
 		page_free_list = &pages[i];
 	}
 	pages[1].pp_link = NULL;
-	u32 free = (u32)(pages + npages);
-	cprintf("free 0x%x\n", free);
-	pages[(free - KERNBASE)/PGSIZE].pp_link = &pages[IOPHYSMEM/PGSIZE - 1];
+	cprintf("mem gap end 0x%x\n", kern_use_end);
+	pages[(kern_use_end - KERNBASE)/PGSIZE].pp_link = &pages[IOPHYSMEM/PGSIZE - 1];
 }
 
 //

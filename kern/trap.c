@@ -65,6 +65,61 @@ trap_init(void)
 	extern struct Segdesc gdt[];
 
 	// LAB 3: Your code here.
+	cprintf("trap init\n");
+	extern struct Segdesc gdt[];
+	extern void t_divide();
+	extern void t_debug();
+	extern void t_nmi();
+	extern void t_brkpt();
+	extern void t_oflow();
+	extern void t_bound();
+	extern void t_illop();
+	extern void t_device();
+	extern void t_dblflt();
+	extern void t_tss();
+	extern void t_segnp();
+	extern void t_stack();
+	extern void t_gpflt();
+	extern void t_pgflt();
+	extern void t_fperr();
+	extern void t_align();
+	extern void t_mchk();
+	extern void t_simderr();
+	extern void t_syscall();
+	extern void t_default();
+
+	extern void i_timer();
+	extern void i_kbd();
+	extern void i_serial();
+	extern void i_spurious();
+	extern void i_ide();
+
+	SETGATE(idt[T_DIVIDE], 1, GD_KT, t_divide, 1)
+	SETGATE(idt[T_DEBUG], 1, GD_KT, t_debug, 1)
+	SETGATE(idt[T_NMI], 1, GD_KT, t_nmi, 3)
+	SETGATE(idt[T_BRKPT], 1, GD_KT, t_brkpt, 3)
+	SETGATE(idt[T_OFLOW], 1, GD_KT, t_oflow, 3)
+	SETGATE(idt[T_BOUND], 1, GD_KT, t_bound, 1)
+	SETGATE(idt[T_ILLOP], 1, GD_KT, t_illop, 1)
+	SETGATE(idt[T_DEVICE], 1, GD_KT, t_device, 1)
+	SETGATE(idt[T_DBLFLT], 1, GD_KT, t_dblflt, 1)
+	SETGATE(idt[T_TSS], 1, GD_KT, t_tss, 1)
+	SETGATE(idt[T_SEGNP], 1, GD_KT, t_segnp, 1)
+	SETGATE(idt[T_STACK], 1, GD_KT, t_stack, 1)
+	SETGATE(idt[T_GPFLT], 0, GD_KT, t_gpflt, 1)
+	SETGATE(idt[T_PGFLT], 0, GD_KT, t_pgflt, 1)
+	SETGATE(idt[T_FPERR], 1, GD_KT, t_fperr, 1)
+	SETGATE(idt[T_ALIGN], 1, GD_KT, t_align, 1)
+	SETGATE(idt[T_MCHK], 1, GD_KT, t_mchk, 1)
+	SETGATE(idt[T_SIMDERR], 1, GD_KT, t_simderr, 1)
+	SETGATE(idt[T_SYSCALL], 0, GD_KT, t_syscall, 3)
+	SETGATE(idt[T_DEFAULT], 1, GD_KT, t_default, 1)
+
+	// SETGATE(idt[IRQ_TIMER+IRQ_OFFSET], 0, GD_KT, i_timer, 3)
+	// SETGATE(idt[IRQ_KBD+IRQ_OFFSET], 0, GD_KT, i_kbd, 3)
+	// SETGATE(idt[IRQ_SERIAL+IRQ_OFFSET], 0, GD_KT, i_serial, 3)
+	// SETGATE(idt[IRQ_SPURIOUS+IRQ_OFFSET], 0, GD_KT, i_spurious, 3)
+	// SETGATE(idt[IRQ_IDE+IRQ_OFFSET], 0, GD_KT, i_ide, 3)
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -144,8 +199,35 @@ trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
-
+	int ret = 0;
+	u32 trap_num = tf->tf_trapno;
+	const char *t_name = trapname(trap_num);
 	// Unexpected trap: The user process or the kernel has a bug.
+	switch (trap_num)
+	{
+		case T_DIVIDE:
+			break;
+		
+		case T_PGFLT:
+			page_fault_handler(tf);
+			return;
+		
+		case T_BRKPT:
+			monitor(tf);
+			return;
+		
+		case T_SYSCALL:
+			//cprintf("syscall num: 0x%x\n",tf->tf_regs.reg_eax);
+			ret = syscall(tf->tf_regs.reg_eax, tf->tf_regs.reg_edx, tf->tf_regs.reg_ecx,
+				tf->tf_regs.reg_ebx, tf->tf_regs.reg_edi, tf->tf_regs.reg_esi);
+			tf->tf_regs.reg_eax = ret;
+			return;
+
+		default:
+			break;
+
+	}
+
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT)
 		panic("unhandled trap in kernel");
