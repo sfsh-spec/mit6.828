@@ -163,6 +163,8 @@ static void
 cga_putc(int c)
 {
 	// if no attribute given, then use black on white
+	// c |= 0x1b5b1200;
+	c |= 0x0600;
 	if (!(c & ~0xFF))
 		c |= 0x0700;
 

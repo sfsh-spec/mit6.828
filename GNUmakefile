@@ -67,7 +67,6 @@ endif
 GDBPORT	:= $(shell expr `id -u` % 5000 + 25000)
 
 CC	:= $(GCCPREFIX)gcc -pipe
-GDB	:= $(GCCPREFIX)gdb
 AS	:= $(GCCPREFIX)as
 AR	:= $(GCCPREFIX)ar
 LD	:= $(GCCPREFIX)ld
@@ -151,7 +150,7 @@ QEMUOPTS += $(QEMUEXTRA)
 	sed "s/localhost:1234/localhost:$(GDBPORT)/" < $^ > $@
 
 gdb:
-	$(GDB) -n -x .gdbinit
+	gdb  -x .gdbinit
 
 pre-qemu: .gdbinit
 
@@ -162,6 +161,7 @@ qemu-nox: $(IMAGES) pre-qemu
 	@echo "***"
 	@echo "*** Use Ctrl-a x to exit qemu"
 	@echo "***"
+	echo $(QEMU)
 	$(QEMU) -nographic $(QEMUOPTS)
 
 qemu-gdb: $(IMAGES) pre-qemu
@@ -181,6 +181,7 @@ print-qemu:
 
 print-gdbport:
 	@echo $(GDBPORT)
+
 
 # For deleting the build
 clean:
@@ -332,3 +333,8 @@ always:
 
 .PHONY: all always \
 	handin git-handin tarball tarball-pref clean realclean distclean grade handin-prep handin-check
+
+########diy command##########
+
+kasm:
+	vim obj/kern/kernel.asm

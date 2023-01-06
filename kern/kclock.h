@@ -6,6 +6,7 @@
 # error "This is a JOS kernel header; user programs should not #include it"
 #endif
 
+
 #define	IO_RTC		0x070		/* RTC port */
 
 #define	MC_NVRAM_START	0xe	/* start of NVRAM: offset 14 */
